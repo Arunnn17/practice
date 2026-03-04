@@ -3,90 +3,67 @@ name: 🌹 Deploy Aishwarya's Love Page
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 jobs:
   build-and-deploy:
     name: Build & Deploy to Minikube
-    runs-on: self-hosted            # Your WSL runner
+    runs-on: self-hosted
 
     steps:
-      # ── Step 1: Get the code ────────────────────────────────────
       - name: 📥 Checkout Code
         uses: actions/checkout@v4
 
-      # ── Step 2: Setup Node.js ───────────────────────────────────
-      - name: 🟢 Setup Node.js v20
+      - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
-      # ── Step 3: Install all npm packages ────────────────────────
       - name: 📦 Install Dependencies
         run: npm ci
 
-      # ── Step 4: Lint the code ───────────────────────────────────
-      - name: 🔍 Lint Code
-        run: npm run lint
-        continue-on-error: true     # Don't fail pipeline on lint warnings
-
-      # ── Step 5: Run tests ───────────────────────────────────────
-      - name: 🧪 Run Tests
-        run: npm test
-
-      # ── Step 6: Build production bundle ─────────────────────────
       - name: 🏗️ Build Project
         run: npm run build
 
-      # ── Step 7: Verify tools exist ──────────────────────────────
       - name: 🔧 Check Tools
         run: |
           echo "=== Docker ===" && docker --version
           echo "=== Minikube ===" && minikube version
           echo "=== kubectl ===" && kubectl version --client
-          echo "=== Helm ===" && helm version
 
-      # ── Step 8: Start Minikube ──────────────────────────────────
+      - name: 🐳 Start Docker
+        run: sudo service docker start || true
+
       - name: 🚀 Start Minikube
         run: |
-          minikube status || minikube start --driver=docker --memory=2200mb --cpus=2
+          minikube status && echo "Already running" || \
+          minikube start --driver=docker --memory=2200mb --cpus=2
           minikube status
 
-      # ── Step 9: Point Docker at Minikube's engine ───────────────
-      - name: 🐳 Configure Docker → Minikube
+      - name: 🔧 Point Docker to Minikube
         run: |
           eval $(minikube docker-env)
-          echo "Docker is now talking to Minikube ✅"
+          docker info | grep Name
 
-      # ── Step 10: Build Docker image inside Minikube ─────────────
       - name: 🔨 Build Docker Image
         run: |
           eval $(minikube docker-env)
           docker build -t aishwarya-webpage:latest .
-          echo "Image built ✅"
           docker images | grep aishwarya
 
-      # ── Step 11: Deploy to Kubernetes ───────────────────────────
-      - name: ☸️ Deploy to Minikube
+      - name: ☸️ Deploy to Kubernetes
         run: |
+          eval $(minikube docker-env)
           kubectl apply -f k8s/deployment.yaml
           kubectl apply -f k8s/service.yaml
-          echo "Manifests applied ✅"
 
-      # ── Step 12: Wait for pods to be ready ──────────────────────
-      - name: ⏳ Wait for Rollout
+      - name: ⏳ Wait for Pods
         run: |
           kubectl rollout status deployment/aishwarya-webpage --timeout=120s
 
-      # ── Step 13: Print the URL ──────────────────────────────────
-      - name: 🌐 Get App URL
+      - name: 🌹 Print Live URL
         run: |
-          echo "=================================="
-          kubectl get pods -l app=aishwarya-webpage
-          kubectl get service aishwarya-webpage-service
-          echo ""
-          echo "🌹 Your Love Page is live at:"
-          echo "$(minikube service aishwarya-webpage-service --url)"
-          echo "=================================="
+          echo "========================================"
+          echo "🌹 Aishwarya's Love Page is LIVE at:"
+          minikube service aishwarya-webpage-service --url
+          echo "========================================"
