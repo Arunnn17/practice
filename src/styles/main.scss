@@ -1,0 +1,41 @@
+// ── Global SCSS Styles ─────────────────────────────────────────────
+// These get bundled by webpack via sass-loader
+
+// Variables
+$rose:       #c0392b;
+$rose-light: #e74c3c;
+$gold:       #c9a84c;
+$text:       #f5e6e8;
+
+// Base reset (the detailed styles live in index.html for simplicity)
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+// Smooth scrolling
+html {
+  scroll-behavior: smooth;
+}
+
+// Selection color
+::selection {
+  background: rgba($rose, 0.3);
+  color: $text;
+}
+
+// Scrollbar styling
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0d0608;
+}
+::-webkit-scrollbar-thumb {
+  background: $rose;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: $rose-light;
+}

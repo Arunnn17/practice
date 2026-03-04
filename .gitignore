@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Build output
+html/
+dist/
+
+# Environment variables (keep secrets safe!)
+.env
+.env.local
+.env.production
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
